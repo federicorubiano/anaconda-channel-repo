@@ -21,12 +21,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 330   # download pass walks every main package; job cap is 360
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      # No pip cache: it needs a requirements.txt to key on, and it would save
+      # seconds on a job whose real cost is the download pass.
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-          cache: pip
 
       - name: Install dependencies
         run: pip install pandas openpyxl nbconvert ipykernel
