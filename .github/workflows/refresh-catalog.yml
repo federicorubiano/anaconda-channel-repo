@@ -1,0 +1,54 @@
+name: Refresh channel catalog
+
+# Re-runs the notebook against Anaconda's live sources and commits the result.
+# The notebook refuses on truncated/partial data, so a bad upstream response
+# fails this job instead of committing wrong numbers.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # 06:00 UTC every Monday
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-catalog
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330   # download pass walks every main package; job cap is 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install pandas openpyxl nbconvert ipykernel
+
+      - name: Execute notebook
+        env:
+          ANACONDA_REPO_TOKEN: ${{ secrets.ANACONDA_REPO_TOKEN }}
+          PYTHONUNBUFFERED: "1"
+        run: |
+          jupyter nbconvert --to notebook --execute \
+            --ExecutePreprocessor.timeout=-1 \
+            --output /tmp/executed.ipynb \
+            anaconda_channel_catalog.ipynb
+
+      - name: Commit refreshed catalog
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md anaconda_channel_catalog.xlsx download_counts_cache.json
+          if git diff --staged --quiet; then
+            echo "No change — sources returned the same figures."
+          else
+            git commit -m "Refresh catalog $(date -u +%Y-%m-%d)"
+            git push
+          fi
