@@ -23,4 +23,4 @@ Sources (all Anaconda-published):
 
 Refresh: `ANACONDA_REPO_TOKEN=<token> jupyter nbconvert --execute anaconda_channel_catalog.ipynb` (needs pandas, openpyxl). Re-running automatically picks up real main-x download counts once .org populates them, and rewrites the figures block above.
 
-`.github/workflows/refresh-catalog.yml` does the same thing on the 1st of each month (and on demand from the Actions tab), committing the regenerated files. It needs `ANACONDA_REPO_TOKEN` as a repository secret; without it the main-x fetch fails and nothing is committed.
+`.github/workflows/refresh-catalog.yml` does the same thing every Monday (and on demand from the Actions tab), committing the regenerated files. It needs `ANACONDA_REPO_TOKEN` as a repository secret; without it the main-x fetch fails and nothing is committed.
